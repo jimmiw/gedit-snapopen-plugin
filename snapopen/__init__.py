@@ -4,6 +4,9 @@ import gedit, gtk, gtk.glade
 import gconf
 import gnomevfs
 import pygtk
+import time
+import fnmatch
+import threading
 pygtk.require('2.0')
 import os, os.path, gobject, urllib
 from gtk import gdk
@@ -89,6 +92,7 @@ class SnapOpenPluginInstance:
 		self._hit_list.connect("select-cursor-row", self.on_select_from_list)
 		self._hit_list.connect("button_press_event", self.on_list_mouse)
 		self._liststore = gtk.ListStore(str, str)
+		self._filelist = gtk.ListStore(str, str)
 		self._hit_list.set_model(self._liststore)
 		column = gtk.TreeViewColumn("Name" , gtk.CellRendererText(), text=0)
 		column.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
@@ -145,16 +149,17 @@ class SnapOpenPluginInstance:
 		# TODO: respect max_result
 		
 		self._liststore.clear()
-		if len(pattern) > 0:
-			def callback(filename):
-				name = os.path.basename(filename)
-				self._liststore.append([name, filename])
-			
+		
+		self._templiststore = gtk.ListStore(str, str)
+		
+		if len(pattern) > 1:
 			self._snapopen_window.set_title("Searching ... ")
-			finder = FileFinder(self._rootdir, "*" + pattern + "*")
-			finder.start(callback)
+			for x in self._filelist:
+				if fnmatch.fnmatch(x[0], "*"+pattern+"*"):
+					self._liststore.append(x)
 		else:
-			self._snapopen_window.set_title("Enter pattern ... ")	
+			self._snapopen_window.set_title("Enter pattern ... ")
+			
 		self._snapopen_window.set_title(oldtitle)
 		
 		selected = []
@@ -180,6 +185,18 @@ class SnapOpenPluginInstance:
 		self._snapopen_window.show()
 		self._glade_entry_name.select_region(0,-1)
 		self._glade_entry_name.grab_focus()
+		
+		# clears the place holder list for all the files
+		self._filelist.clear();
+		
+		def callback(filename):
+			name = os.path.basename(filename)
+			self._filelist.append([name, filename])
+			
+		# fetches the data from the current root
+		finder = FileFinder(self._rootdir)
+		finder.start(callback)
+		
 
 	#on any keyboard event in main window
 	def on_window_key( self, widget, event ):

@@ -22,14 +22,11 @@ else:
 			return path
 
 class FileFinder:
-	def __init__(self, directory, pattern = None):
+	def __init__(self, directory):
 		self.directory = os.path.normcase(os.path.normpath(directory))
-		if pattern:
-			self.pattern = pattern.lower()
-		else:
-			self.pattern = None
 	
 	def start(self, callback):
+		self._current_count = 0
 		self._traverse(self.directory, set(), None, callback)
 	
 	def _traverse(self, directory, dirs_seen, ignore_file, callback):
@@ -37,6 +34,7 @@ class FileFinder:
 			entries = os.listdir(directory)
 		except (OSError):
 			entries = None
+		
 		if entries:
 			try:
 				f = open(os.path.join(directory, '.snapopen_ignore'), 'r')
@@ -45,13 +43,16 @@ class FileFinder:
 				ignore_file = IgnoreFile(directory, lines, ignore_file)
 			except (IOError):
 				pass
+			
 			for entry in sorted(entries):
 				if entry.startswith('.'):
 					# Ignore hidden files.
 					continue
+				
 				path      = os.path.join(directory, entry)
 				real_path = os.path.realpath(path)
 				norm_path = os.path.normcase(os.path.normpath(path))
+				
 				if ignore_file and ignore_file.match(norm_path):
 					continue
 				if os.path.isdir(norm_path):
@@ -63,5 +64,4 @@ class FileFinder:
 						self._traverse(norm_path, dirs_seen, ignore_file, callback)
 				else:
 					rel_path = relpath(norm_path, self.directory)
-					if not self.pattern or fnmatch.fnmatch(rel_path.lower(), self.pattern):
-						callback(rel_path)
+					callback(rel_path)
