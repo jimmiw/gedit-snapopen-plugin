@@ -152,10 +152,15 @@ class SnapOpenPluginInstance:
 		
 		self._templiststore = gtk.ListStore(str, str)
 		
-		if len(pattern) > 1:
+		if len(pattern) >= 1:
+			changed_pattern = "";
+			
+			for x in pattern:
+				changed_pattern = changed_pattern + "*" + x
+			
 			self._snapopen_window.set_title("Searching ... ")
 			for x in self._filelist:
-				if fnmatch.fnmatch(x[0], "*"+pattern+"*"):
+				if fnmatch.fnmatch(x[0], "*"+changed_pattern+"*"):
 					self._liststore.append(x)
 		else:
 			self._snapopen_window.set_title("Enter pattern ... ")
