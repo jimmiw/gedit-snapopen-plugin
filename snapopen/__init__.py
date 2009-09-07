@@ -158,9 +158,12 @@ class SnapOpenPluginInstance:
 			for x in pattern:
 				changed_pattern = changed_pattern + "*" + x
 			
+			# sets the pattern to lower casing
+			changed_pattern = changed_pattern.lower();
+			
 			self._snapopen_window.set_title("Searching ... ")
 			for x in self._filelist:
-				if fnmatch.fnmatch(x[0], "*"+changed_pattern+"*"):
+				if fnmatch.fnmatch(x[0].lower(), "*"+changed_pattern+"*"):
 					self._liststore.append(x)
 		else:
 			self._snapopen_window.set_title("Enter pattern ... ")
