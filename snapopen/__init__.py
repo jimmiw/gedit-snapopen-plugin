@@ -180,6 +180,7 @@ class SnapOpenPluginInstance:
 	#on menuitem activation (incl. shortcut)
 	def on_snapopen_action( self ):
 		fbroot = self.get_filebrowser_root()
+
 		if fbroot != "" and fbroot is not None:
 			self._rootdir = fbroot
 			self._snapopen_window.set_title("Snap open (Filebrowser integration)")
@@ -233,6 +234,8 @@ class SnapOpenPluginInstance:
 	#opens (or switches to) the given file
 	def _open_file( self, filename ):
  		uri = "file://" + self._rootdir + "/" + filename
+ 		# fixed a bug where you could not open files in folders with a space
+ 		uri = uri.replace(' ','%20')
 		if pre216_version:
 			tab = self.old_get_tab_from_uri(self._window, uri)
 		else:
